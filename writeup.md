@@ -72,6 +72,9 @@ I manually select 4 points in the image as source points and set four distinatio
 Then I slightly tune the coordinates of 4 souce points to make the lines in the warped image nearly vertical and straight.
 Here is the result of perspective tranform.
 
+![Warp Example][image4]
+
+
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
