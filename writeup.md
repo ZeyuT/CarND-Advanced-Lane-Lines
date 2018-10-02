@@ -1,10 +1,19 @@
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
+# CarND-Advanced-Lane-Lines # 
 
 ---
 
-**Advanced Lane Finding Project**
+# Introduction #
+
+This is my solution to the Advanced Lane Lines project of the Udacity Self-Driving Car Engineer Nanodegree Program. The goal for the project is to write a software pipeline to identify the lane boundaries in a video from a front-facing camera on a car.
+
+Camera calibration, color transforms, gradients, perspective transform are used in my solution. Moverover, lane curvature and vehicle position are estimated based on numerical methods.
+
+[Here](./project_video_output.mp4) is the final output video.
+
+---
+
+# Implementation #
+
 
 The goals / steps of this project are the following:
 
@@ -19,13 +28,42 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/undistort_output.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
+[image1]: ./examples/calibration1_undistort.png "calibration1_undistort"
+[image2]: ./examples/test1_undistort.jpg "test1_undistort"
 [image3]: ./examples/binary_combo_example.jpg "Binary Example"
 [image4]: ./examples/warped_straight_lines.jpg "Warp Example"
 [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
 [image6]: ./examples/example_output.jpg "Output"
 [video1]: ./project_video.mp4 "Video"
+
+# Camera Calibration and Undistortion #
+My camera calibration starts by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, "object points" is just a replicated array of coordinates. "Image points" will be the (x, y) pixel position of each of the corners in the image plane. Every time I successfully detect all chessboard corners in a test image, those "object points" and "image points" will be appended into two arrays, respectively. In practice, I use `cv2.findChessboardCorners()` function in OpenCV to get all corners on grayscale of all calibration images. These corners are image points. Then I set the coordinate frame on the chessboard and get all object points corresponding to image points.
+
+After that, I use `cv2.calibrateCamera()` function in `OpenCV` to get coefficients of matrixes distortion and calibration.
+As an example, I use these matrixes to undistort "./camera_cal/calibration1.jpg". Here is the result.
+
+![calibration1_undistort][image1]
+
+Here is another example, where I use these matrixes to undistort "./test_images/test1.jpg". Here is the result.
+
+![test1_undistort][image2]
+
+# Image pipeline #
+
+### Get Theresholded Binary images
+
+After many trials, I choose to use the combination of y gradient on G channel of GRB image and S channel of HLS image to mask those undistorted images. The theresholds are showed below.
+
+|                         | Max thereshold | Max thereshold |
+|:-----------------------:|:--------------:|:--------------:| 
+| Y gradient of G channel | 100            | 20             |
+| S channel value         | 255            | 170            |
+
+Here is example of apply theresholding. The source image is ‘./test_images/test5.jpg’.
+
+![Binary Example][image3]
+
+
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
@@ -49,7 +87,6 @@ I start by preparing "object points", which will be the (x, y, z) coordinates of
 
 I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
 
-![alt text][image1]
 
 ### Pipeline (single images)
 
