@@ -1,4 +1,5 @@
 # CarND-Advanced-Lane-Lines # 
+Self-Driving Car Engineer Nanodegree Program
 
 ---
 
@@ -28,15 +29,15 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/calibration1_undistort.png "calibration1_undistort"
-[image2]: ./examples/test1_undistort.jpg "test1_undistort"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
+[image1]: ./examples/undistort_output.jpg "calibration1_undistort"
+[image2]: ./examples/test1_undistort.png "test1_undistort"
+[image3]: ./examples/binary_combo_example.png "Binary Example"
 [image4]: ./examples/warped_straight_lines.jpg "Warp Example"
 [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
 [image6]: ./examples/example_output.jpg "Output"
 [video1]: ./project_video.mp4 "Video"
 
-# Camera Calibration and Undistortion #
+## Camera Calibration and Undistortion ##
 My camera calibration starts by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, "object points" is just a replicated array of coordinates. "Image points" will be the (x, y) pixel position of each of the corners in the image plane. Every time I successfully detect all chessboard corners in a test image, those "object points" and "image points" will be appended into two arrays, respectively. In practice, I use `cv2.findChessboardCorners()` function in OpenCV to get all corners on grayscale of all calibration images. These corners are image points. Then I set the coordinate frame on the chessboard and get all object points corresponding to image points.
 
 After that, I use `cv2.calibrateCamera()` function in `OpenCV` to get coefficients of matrixes distortion and calibration.
@@ -48,9 +49,9 @@ Here is another example, where I use these matrixes to undistort "./test_images/
 
 ![test1_undistort][image2]
 
-# Image pipeline #
+## Image Pipeline ##
 
-### Get Theresholded Binary images
+### Get Theresholded Binary Images ###
 
 After many trials, I choose to use the combination of y gradient on G channel of GRB image and S channel of HLS image to mask those undistorted images. The theresholds are showed below.
 
@@ -63,6 +64,13 @@ Here is example of apply theresholding. The source image is ‘./test_images/tes
 
 ![Binary Example][image3]
 
+### Wrap Theresholded Image (Perspective Transform)
+
+I use "./test_images/straight_lines1.jpg" to get the M matrix of perspective transform, which is used in processing all images.
+
+I manually select 4 points in the image as source points and set four distination points, and perform the perspective transform by using `cv2.getPerspectiveTransform()` function to get the warped image.
+Then I slightly tune the coordinates of 4 souce points to make the lines in the warped image nearly vertical and straight.
+Here is the result of perspective tranform.
 
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
