@@ -109,7 +109,7 @@ Here is an example of results. Useful pixels are colored. The fitted lines in th
 
 #### Further Process Lane Pixels ####
 
-Here I define a class, Line () to calculate lane curvatures, the vehicle's position on the current lane, and filter out noise.
+Here I define a class, `Line()` to calculate lane curvatures, the vehicle's position on the current lane, and filter out noise.
 
 _Get fitted results, curvatures and the position of the vehicle_
 
