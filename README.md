@@ -13,6 +13,8 @@ Camera calibration, color transforms, gradients, perspective transform are used 
 
 [Here](./project_video_output.mp4) is the final output video.
 
+[Here](./writeup.pdf) is a detailed writeup report.
+
 ---
 
 ## Implementation ##
@@ -35,7 +37,7 @@ The goals / steps of this project are the following:
 [image2]: ./examples/test1_undistort.png "test1_undistort"
 [image3]: ./examples/binary_combo_example.png "Binary Example"
 [image4]: ./examples/perspective_transform.png "Warp Example"
-[image5]: ./examples/binary_warped.jpg "Warped Binary"
+[image5]: ./examples/binary_warpped.jpg "Warped Binary"
 [image6]: ./examples/FittedLine.png "FittedLine"
 [image7]: ./examples/curvature_formula.png "Curvature Formula"
 [image8]: ./examples/straight_lines2.jpg "Output example"
