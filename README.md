@@ -9,7 +9,7 @@ This is my solution to the Advanced Lane Lines project of the Udacity Self-Drivi
 
 Camera calibration, color transforms, gradients, perspective transform are used in my solution. Moverover, lane curvature and vehicle position are estimated based on numerical methods.
 
-[Here](./examples/test2.jpg) is an example of output images. All final output images can be seen in the folder "./output_images".
+[Here](./examples/result2.png) is an example of output images. All final output images can be seen in the folder "./output_images".
 
 [Here](./project_video_output.mp4) is the final output video.
 
