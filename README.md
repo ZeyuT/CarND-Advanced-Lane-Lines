@@ -9,6 +9,8 @@ This is my solution to the Advanced Lane Lines project of the Udacity Self-Drivi
 
 Camera calibration, color transforms, gradients, perspective transform are used in my solution. Moverover, lane curvature and vehicle position are estimated based on numerical methods.
 
+[Here](./examples/test2.jpg) is an example of output images. All final output images can be seen in the folder "./output_images".
+
 [Here](./project_video_output.mp4) is the final output video.
 
 ---
@@ -32,9 +34,13 @@ The goals / steps of this project are the following:
 [image1]: ./examples/undistort_output.jpg "calibration1_undistort"
 [image2]: ./examples/test1_undistort.png "test1_undistort"
 [image3]: ./examples/binary_combo_example.png "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
+[image4]: ./examples/perspective_transform.png "Warp Example"
+[image5]: ./examples/binary_warped.jpg "Warped Binary"
+[image6]: ./examples/FittedLine.png "FittedLine"
+[image7]: ./examples/curvature_formula.png "Curvature Formula"
+[image8]: ./examples/straight_lines2.jpg "Output example"
+[image9]: ./examples/test2.jpg "Output example"
+
 [video1]: ./project_video.mp4 "Video"
 
 ### Camera Calibration and Undistortion ###
@@ -74,106 +80,51 @@ Here is a result of perspective tranform.
 
 ![Warp Example][image4]
 
-Then I used the M matrix to warp  those thresholded binary images. Here is an example, and the source image is "./test_images/test5.jpg". 
+Then I used the M matrix to warp those thresholded binary images. Here is an example, and the source image is "./test_images/test5.jpg". 
 
 ![Warp Example][image5]
 
+#### Detect Lane Pixels ####
 
-## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
+_Get the histogram and find the x values of left and right line on the bottom of image_
 
-### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
+By summing each column of the bottom half of binary wrapped image gotten from the image processing, I get the histogram of the bottom half of the image. Then from the right half and left half of the image, I choose the x value of the column with the highest value in histogram as the x-position of bases of left and right line.
+Then I decide whether the right and left lines are detected from the former frame by comparing the base x values of current and former frame. If the input is a single image, then the lines in it are always not detected from the former frame.
 
----
+_Find useful pixels by sliding 9 windows_
 
-### Writeup / README
+If lines in current frame is not detected in the former frame, I use sliding windows to find useful pixels.
+The image is divided into left and right part evenly. For each part, 9 longitudinally connected windows with margin of 50 are used to find nonzero pixels. For each part, from the bottom of the image, the first window is centered at the x-position of bases of the line, and following windows are centered at the center of previous window’s center unless the previous window find more than 50 pixels, in which case the following window is centered at the mean positions of those pixels found in the previous window.
 
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
+_Find useful pixels by searching around the fitted lines in the previous frame_
 
-You're reading it!
+If lines in current frame has been detected in the previous frame, I just simply searching the area around the fitted lines in the previous frame with the margin of 50.
 
-### Camera Calibration
+For every single test image, the pipeline uses sliding windows to find useful pixels.
+Here is an example of results. Useful pixels are colored. The fitted lines in the image are second order polynomial to these pixels. The source image is ‘test5.jpg’.
 
-#### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
+![Fitted Lines][image6]
 
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
+#### Further Process Lane Pixels ####
 
-I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
+Here I define a class, Line () to calculate lane curvatures, the vehicle's position on the current lane, and filter out noise.
 
-I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
+_Get fitted results, curvatures and the position of the vehicle_
 
+In the class, I define a function `UpDate()` to do all the calculations.
+The function takes in positions of useful pixels and use them to get coefficients of second order polynomial. According to these coefficients, the curvature can be calculated based on the following formula:
 
+![Curvature Equation][image7]
 
-### Pipeline (single images)
+The position of the vehicle with respect to center L can be calculated by applying:
 
-#### 1. Provide an example of a distortion-corrected image.
+𝐿 = ((𝑥_𝑙𝑒𝑓𝑡+𝑥_𝑟𝑖𝑔ℎ𝑡 – 1280) ∗ 𝑥𝑚_𝑝𝑒𝑟_𝑝𝑖𝑥
 
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-![alt text][image2]
+Where x is the x value on fitted lines when set y value as the image height (719), 𝑥𝑚_𝑝𝑒𝑟_𝑝𝑖𝑥 is the factor to convert pixel to meter.
 
-#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+_Filter noise_
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+The function `UpDate()` also stores the fitting coefficients used in the last 5 iterations. And if the new fitting coefficients of current frame have mild difference with the average coefficients of the last 5 iterations, the current frame will be considered as valid frame.
+In valid frames, new fitted coefficients are used for finding and displaying lanes, calculate curvatures and vehicle position. In other frames, the average coefficients of the last 5 iterations are used to do these things. And only fitted coefficients in valid frames are stored.
+If the stored set of fitted coefficients is less than a minimum number, which I set 5, the stored data will be considered to be weak, and the current frame will be consider as valid frame.
 
-![alt text][image3]
-
-#### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
-
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
-
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
-
-This resulted in the following source and destination points:
-
-| Source        | Destination   | 
-|:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
-
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
-
-![alt text][image4]
-
-#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
-
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
-
-![alt text][image5]
-
-#### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
-
-I did this in lines # through # in my code in `my_other_file.py`
-
-#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
-
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
-
-![alt text][image6]
-
----
-
-### Pipeline (video)
-
-#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
-
-Here's a [link to my video result](./project_video.mp4)
-
----
-
-### Discussion
-
-#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
-
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
